@@ -28,8 +28,18 @@ class DetailPageState extends State<DetailPage> {
 
   DetailBloc _detailBloc;
 
+  final _formKey = GlobalKey<FormState>();
+
   TextEditingController ControllerOne = TextEditingController();
   TextEditingController ControllerTwo = TextEditingController();
+
+  @override
+  void dispose() {
+    ControllerOne.dispose();
+
+    ControllerTwo.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -43,7 +53,7 @@ class DetailPageState extends State<DetailPage> {
   }
 
   Future<bool> _onBackPressed() async {
-    if (!isSaved) {
+    if (!isSaved && ControllerOne.text.length > 0) {
       return showDialog(
               context: context,
               builder: (context) => AlertDialog(
@@ -65,6 +75,9 @@ class DetailPageState extends State<DetailPage> {
                     ],
                   )) ??
           false;
+    }
+    if (!isSaved && ControllerOne.text.length < 1) {
+      _deleteItem();
     } else {
       moveToLastScreen();
     }
@@ -95,7 +108,7 @@ class DetailPageState extends State<DetailPage> {
   }
 
   _deleteItem() {
-    if(model.id != null) {
+    if (model.id != null) {
       _detailBloc.deleteSink.add(model.id);
     }
     moveToLastScreen();
@@ -116,7 +129,7 @@ class DetailPageState extends State<DetailPage> {
                   FlatButton(
                     child: Text('NO'),
                     onPressed: () {
-                     // moveToLastScreen();
+                      // moveToLastScreen();
                       Navigator.pop(context);
                     },
                   ),
@@ -128,9 +141,9 @@ class DetailPageState extends State<DetailPage> {
                   ),
                 ],
               ));
-    } //else {
-      //_deleteItem();
-    //}
+    } else {
+      _deleteItem();
+    }
   }
 
   @override
@@ -157,7 +170,11 @@ class DetailPageState extends State<DetailPage> {
           actions: [
             IconButton(
               icon: Icon(Icons.save),
-              onPressed: _saveWrapper,
+              onPressed: () {
+                if (_formKey.currentState.validate()) {
+                  _saveWrapper();
+                }
+              },
             ),
             IconButton(
               icon: Icon(Icons.delete),
@@ -166,6 +183,7 @@ class DetailPageState extends State<DetailPage> {
           ],
         ),
         body: Form(
+          key: _formKey,
           child: Padding(
             padding: EdgeInsets.only(top: 15.0, left: 15.0, right: 15.0),
             child: ListView(
@@ -177,9 +195,12 @@ class DetailPageState extends State<DetailPage> {
                     style: textStyle,
                     maxLength: 256,
                     maxLines: null,
+                    autocorrect: false,
+                    autofocus: true,
+                    keyboardType: TextInputType.text,
                     validator: (String value) {
                       if (value.isEmpty) {
-                        return 'This field cannot be emptry';
+                        return 'This field is required!';
                       } else {
                         return null;
                       }
@@ -187,9 +208,19 @@ class DetailPageState extends State<DetailPage> {
                     onChanged: (value) {
                       updateWord();
                     },
+                    onTap: () {
+                      _formKey.currentState.reset();
+                    },
                     decoration: InputDecoration(
                         labelText: 'Word',
                         labelStyle: textStyle,
+//                        suffixIcon: IconButton(
+//                          icon: Icon(Icons.close),
+//                          onPressed: () {
+//                            ControllerOne.clear();
+//                            updateWord();
+//                          },
+//                        ),
                         errorStyle:
                             TextStyle(color: Colors.red, fontSize: 15.0),
                         border: OutlineInputBorder(
@@ -210,6 +241,13 @@ class DetailPageState extends State<DetailPage> {
                     decoration: InputDecoration(
                       labelText: 'Translation',
                       labelStyle: textStyle,
+//                      suffixIcon: IconButton(
+//                          icon: Icon(Icons.close),
+//                        onPressed: () {
+//                          ControllerTwo.clear();
+//                          updateTranslation();
+//                        },
+//                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(5.0),
                       ),

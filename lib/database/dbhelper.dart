@@ -67,7 +67,7 @@ class DBProvider {
 
   Future<List<Model>> getModelList() async {
     final db = await this.database;
-    var res = await db.query(dbTable, orderBy: '$colId ASC');
+    var res = await db.query(dbTable, orderBy: '$colId DESC');
     List<Model> modelList =
         res.isNotEmpty ? res.map((e) => Model.fromMap(e)).toList() : [];
     return modelList;

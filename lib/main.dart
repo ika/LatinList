@@ -5,7 +5,7 @@ import 'package:flutterapplatinlist/blocs/bdetail.dart';
 import 'package:flutterapplatinlist/blocs/provider.dart';
 import 'package:flutterapplatinlist/blocs/bmain.dart';
 import 'package:flutterapplatinlist/pages/detail.dart';
-import 'package:flutterapplatinlist/search_page.dart';
+import 'package:flutterapplatinlist/pages/search.dart';
 
 import 'models/model.dart';
 
