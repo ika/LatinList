@@ -7,7 +7,7 @@ import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
 class DBHelper {
-  final String _dbName = Constants.listDatabaseName;
+  final String _dbName = Constants.listDBName;
 
   static final DBHelper _instance = DBHelper.internal();
 

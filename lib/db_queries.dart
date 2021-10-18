@@ -8,7 +8,7 @@ import 'db_helper.dart';
 DBHelper con = DBHelper();
 
 class DBQueries {
-  final String _dbTable = Constants.listTableName;
+  final String _dbTable = Constants.listTBName;
 
   Future<int> insertModel(Model model) async {
     final db = await con.db;
