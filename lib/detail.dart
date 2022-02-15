@@ -2,55 +2,45 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-import 'package:flutterapplatinlist/db_model.dart';
+import 'package:flutterapplatinlist/model.dart';
+
+import 'cu_queries.dart';
+import 'dialogs.dart';
 
 class DetailPage extends StatefulWidget {
-  Model model;
-  String title;
+  const DetailPage({Key key, this.model, this.title}) : super(key: key);
 
-  DetailPage(Model model, String title) {
-    this.model = model;
-    this.title = title;
-  }
+  final CustomModel model;
+  final String title;
 
   @override
-  State<StatefulWidget> createState() {
-    return DetailPageState(model, title);
-  }
+  _DetailPageState createState() => _DetailPageState();
 }
 
-class DetailPageState extends State<DetailPage> {
-  Model model;
-  String title;
-  DetailBloc _detailBloc;
+class _DetailPageState extends State<DetailPage> {
   bool isSaved = true;
 
-  TextEditingController ControllerOne = TextEditingController();
-  TextEditingController ControllerTwo = TextEditingController();
+  CustomDBQueries _customDBQueries = CustomDBQueries();
 
-  DetailPageState(Model model, String title) {
-    this.model = model;
-    this.title = title;
-    ControllerOne.text = model.word;
-    ControllerTwo.text = model.trans;
-  }
+  TextEditingController controllerOne = TextEditingController();
+  TextEditingController controllerTwo = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _detailBloc = BlocProvider.of<DetailBloc>(context);
-    //ControllerOne.addListener(updateWord);
+    controllerOne.text = widget.model.word;
+    controllerTwo.text = widget.model.trans;
   }
 
   @override
   void dispose() {
-    ControllerOne.dispose();
-    ControllerTwo.dispose();
+    controllerOne.dispose();
+    controllerTwo.dispose();
     super.dispose();
   }
 
-_onBackPressed() async {
-    if (!isSaved && ControllerOne.text.length > 0) {
+  _onBackPressed() async {
+    if (!isSaved && controllerOne.text.length > 0) {
       return showDialog(
           context: context,
           builder: (context) => AlertDialog(
@@ -76,39 +66,52 @@ _onBackPressed() async {
     }
   }
 
-  void moveToLastScreen() {
+  Future<void> moveToLastScreen() async {
     Navigator.of(context).popUntil((route) => route.isFirst);
   }
 
   void updateWord() {
-    if (model.word != ControllerOne.text) {
-      model.word = ControllerOne.text;
-      isSaved = false;
-    }
+    // if (model.word != controllerOne.text) {
+    //   model.word = controllerOne.text;
+    //   isSaved = false;
+    // }
   }
 
   void updateTranslation() {
-    if (model.trans != ControllerTwo.text) {
-      model.trans = ControllerTwo.text;
-      isSaved = false;
-    }
+    // if (model.trans != controllerTwo.text) {
+    //   model.trans = controllerTwo.text;
+    //   isSaved = false;
+    // }
+  }
+
+  void _deleteWrapper() {
+    var arr = List.filled(2, '');
+    arr[0] = "DELETE?";
+    arr[1] = "Are you sure you want to delete this item?";
+
+    ConfirmDialog().showConfirmDialog(context, arr).then(
+      (value) {
+        if (value == ConfirmAction.accept) {
+          _customDBQueries
+              .deleteModel(widget.model.id)
+              .then((value) => {moveToLastScreen()});
+        }
+      }, //_deleteWrapper,
+    );
   }
 
   void _saveWrapper() {
-    if (model.word.length > 0 || model.trans.length > 0) {
-      isSaved = true;
-
-      if (model.id != null) {
-        _detailBloc.updateSink.add(model);
-      } else {
-        _detailBloc.addSink.add(model);
-      }
+    if (widget.model.id == null) {
+      var model =
+          CustomModel(word: controllerOne.text, trans: controllerTwo.text);
+      _customDBQueries.insertModel(model).then((value) => {moveToLastScreen()});
+    } else {
+      var model = CustomModel(
+          id: widget.model.id,
+          word: controllerOne.text,
+          trans: controllerTwo.text);
+      _customDBQueries.updateModel(model).then((value) => {moveToLastScreen()});
     }
-  }
-
-  void _submit() {
-    _saveWrapper();
-    moveToLastScreen();
   }
 
   @override
@@ -121,29 +124,29 @@ _onBackPressed() async {
         return Future.value(false);
       },
       child: Scaffold(
-        resizeToAvoidBottomPadding: false,
+        resizeToAvoidBottomInset: false,
         appBar: AppBar(
-          title: Text(this.title),
+          title: Text(widget.title),
           leading: IconButton(
             icon: Icon(Icons.arrow_back),
             onPressed: () {
               _onBackPressed();
             },
           ),
-          // actions: [
-          //   IconButton(
-          //     icon: Icon(Icons.save),
-          //     onPressed: () {
-          //       if (_formKey.currentState.validate()) {
-          //         _saveWrapper();
-          //       }
-          //     },
-          //   ),
-          //   IconButton(
-          //     icon: Icon(Icons.delete),
-          //     onPressed: _deleteDialogWrapper,
-          //   )
-          // ],
+          actions: [
+            //   IconButton(
+            //     icon: Icon(Icons.save),
+            //     onPressed: () {
+            //       if (_formKey.currentState.validate()) {
+            //         _saveWrapper();
+            //       }
+            //     },
+            //   ),
+            IconButton(
+              icon: Icon(Icons.delete),
+              onPressed: _deleteWrapper,
+            )
+          ],
         ),
         body: Padding(
           padding: const EdgeInsets.all(8.0),
@@ -153,7 +156,7 @@ _onBackPressed() async {
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 TextFormField(
-                  controller: ControllerOne,
+                  controller: controllerOne,
                   style: textStyle,
                   maxLength: 256,
                   maxLines: null,
@@ -181,7 +184,7 @@ _onBackPressed() async {
                 Padding(
                   padding: EdgeInsets.only(top: 5.0, bottom: 5.0),
                   child: TextFormField(
-                    controller: ControllerTwo,
+                    controller: controllerTwo,
                     style: textStyle,
                     maxLength: 512,
                     maxLines: null,
@@ -198,7 +201,7 @@ _onBackPressed() async {
                   ),
                 ),
                 ElevatedButton(
-                  onPressed: _submit,
+                  onPressed: _saveWrapper,
                   child: Text("SAVE"),
                 ),
               ],

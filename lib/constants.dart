@@ -2,10 +2,10 @@
 
 class Constants {
   // Latin List
-  static const String listDBName = "list.db"; // change the name to update
-  static const String listTBName = "latinlist";
+  static const String listDBName = "wordlist.db"; // change the name to update
+  static const String listTBName = "t_wordlist";
 
-  // Search result list
-  static const String resultDBName = "result.db"; // change the name to update
-  static const String resultTBName = "resultlist";
+  // Custom result list
+  static const String customDBName = "custom.db"; // change the name to update
+  static const String customTBName = "customlist";
 }

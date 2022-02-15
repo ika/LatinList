@@ -1,9 +1,15 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:flutterapplatinlist/detail.dart';
 import 'package:flutterapplatinlist/search.dart';
+//import 'package:flutterapplatinlist/search.dart';
+//import 'package:flutterapplatinlist/detail.dart';
+//import 'package:flutterapplatinlist/search.dart';
 
-import 'db_model.dart';
+import 'dialogs.dart';
+import 'model.dart';
+import 'cu_queries.dart';
+import 'detail.dart';
 
 void main() => runApp(MyApp());
 
@@ -15,10 +21,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.green,
       ),
-      home: BlocProvider(
-        bloc: MainBloc(),
-        child: MainPage(title: 'Latin Word list'),
-      ),
+      home: MainPage(title: 'Latin Word list'),
     );
   }
 }
@@ -33,62 +36,86 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
+  CustomDBQueries _customDBQueries = CustomDBQueries();
   final scaffoldKey = GlobalKey<ScaffoldState>();
-  MainBloc _mainBloc;
-  List<Model> modelList = [];
+  List<CustomModel> modelList = [];
 
   @override
   void initState() {
     super.initState();
-    _mainBloc = BlocProvider.of<MainBloc>(context);
   }
 
-  void navigateToDetail(Model model, String title) async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => BlocProvider(
-          bloc: DetailBloc(),
-          child: DetailPage(model, title),
-        ),
-      ),
+  void navigateToSearch(String text, String title) async {
+    Future.delayed(
+      const Duration(milliseconds: 200),
+      () {
+        Navigator.push(
+          context,
+          CupertinoPageRoute(
+              builder: (context) =>
+                  SearchPage(text: text, title: title)),
+        ).then(
+          (value) {
+            setState(() {});
+          },
+        );
+      },
     );
-
-    _mainBloc.getModelList(); // reload list
   }
 
-  Future<void> _deleteItem(int id) async {
-    if (id != null) {
-      _mainBloc.deleteSink.add(id);
-      _mainBloc.getModelList();
-    }
+  void navigateToDetail(CustomModel model, String title) async {
+    Future.delayed(
+      const Duration(milliseconds: 200),
+      () {
+        Navigator.push(
+          context,
+          CupertinoPageRoute(
+              builder: (context) => DetailPage(model: model, title: title)),
+        ).then(
+          (value) {
+            setState(() {});
+          },
+        );
+      },
+    );
   }
 
-  _deleteDialogWrapper(modelList) {
-    return showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-              title: Text(
-                'Delete this entry?',
-                style: TextStyle(color: Colors.red),
-              ),
-              content: Text(modelList.word),
-              actions: <Widget>[
-                TextButton(
-                  child: Text('NO'),
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                ),
-                TextButton(
-                  child: Text('YES'),
-                  onPressed: () {
-                    Navigator.pop(context);
-                    _deleteItem(modelList.id);
-                  },
-                ),
-              ],
-            ));
-  }
+  //   //_mainBloc.getModelList(); // reload list
+  // }
+
+  // Future<void> _deleteItem(int id) async {
+  //   if (id != null) {
+  //     // _mainBloc.deleteSink.add(id);
+  //     // _mainBloc.getModelList();
+  //   }
+  // }
+
+  // _deleteDialogWrapper(modelList) {
+  //   return showDialog(
+  //       context: context,
+  //       builder: (context) => AlertDialog(
+  //             title: Text(
+  //               'Delete this entry?',
+  //               style: TextStyle(color: Colors.red),
+  //             ),
+  //             content: Text(modelList.word),
+  //             actions: <Widget>[
+  //               TextButton(
+  //                 child: Text('NO'),
+  //                 onPressed: () {
+  //                   Navigator.pop(context);
+  //                 },
+  //               ),
+  //               TextButton(
+  //                 child: Text('YES'),
+  //                 onPressed: () {
+  //                   Navigator.pop(context);
+  //                   _deleteItem(modelList.id);
+  //                 },
+  //               ),
+  //             ],
+  //           ));
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -98,89 +125,84 @@ class _MainPageState extends State<MainPage> {
         title: Text(widget.title),
         actions: [
           IconButton(
-              tooltip: 'Search',
-              icon: Icon(Icons.search),
-              onPressed: () => showSearch(
-                  context: context,
-                  delegate: SearchPage<Model>(
-                    items: modelList,
-                    itemStartsWith: true,
-                    searchLabel: 'Search',
-                    suggestion: Center(
-                      child: Text('Filter by word'),
-                    ),
-                    failure: Center(
-                      child: Text('No results found'),
-                    ),
-                    filter: (model) => [model.word],
-                    builder: (model) => ListTile(
-                      title: Text(model.word),
-                      subtitle: Text(model.trans),
-                      onTap: () {
-                        navigateToDetail(
-                            Model(model.id, model.word, model.trans), 'Edit');
-                      },
-                    ),
-                  ))),
+            tooltip: 'Search',
+            icon: Icon(Icons.search),
+            onPressed: () {
+              InputDialog().showInputDialog(context).then(
+                (value) {
+                  //print(searchInput);
+                  if (value == ConfirmAction.accept) {
+                    navigateToSearch(searchInput, 'Search');
+                  }
+                },
+              );
+            },
+          ),
         ],
       ),
       body: Container(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
+          children: [
             Expanded(
-              child: StreamBuilder<List<Model>>(
-                  stream: _mainBloc.ouputStream,
-                  builder: (BuildContext context,
-                      AsyncSnapshot<List<Model>> snapshot) {
-                    if (snapshot.hasData) {
-                      if (snapshot.data.length < 1) {
-                        return Center(
-                          child: Text('No items found'),
-                        );
-                      }
-                      modelList = snapshot.data;
-                      return ListView.builder(
-                        itemCount: modelList.length,
-                        itemBuilder: (BuildContext context, int index) {
-                          return Column(
-                            children: <Widget>[
-                              ListTile(
-                                title: Text(modelList[index].word),
-                                subtitle: Text(modelList[index].trans),
-                                onTap: () {
-                                  navigateToDetail(
-                                      Model(
-                                          modelList[index].id,
-                                          modelList[index].word,
-                                          modelList[index].trans),
-                                      'Edit');
-                                },
-                                onLongPress: () {
-                                  _deleteDialogWrapper(modelList[index]);
-                                },
-                              ),
-                              Divider(
-                                height: 2.0,
-                                indent: 15.0,
-                                endIndent: 20.0,
-                              )
-                            ],
-                          );
-                        },
+              child: FutureBuilder<List<CustomModel>>(
+                future: _customDBQueries.getModelList(),
+                initialData: [],
+                builder: (BuildContext context,
+                    AsyncSnapshot<List<CustomModel>> snapshot) {
+                  if (snapshot.hasData) {
+                    if (snapshot.data.length < 1) {
+                      return Center(
+                        child: Text(
+                          'No items found',
+                          style: TextStyle(
+                              fontSize: 20, fontWeight: FontWeight.bold),
+                        ),
                       );
                     }
-                    return Center(
-                      child: CircularProgressIndicator(),
+                    modelList = snapshot.data;
+                    return ListView.builder(
+                      itemCount: modelList.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        return Column(
+                          children: [
+                            ListTile(
+                              title: Text(modelList[index].word),
+                              subtitle: Text(modelList[index].trans),
+                              onTap: () {
+                                navigateToDetail(
+                                    CustomModel(
+                                        id: modelList[index].id,
+                                        word: modelList[index].word,
+                                        trans: modelList[index].trans),
+                                    'Edit');
+                              },
+                              // onLongPress: () {
+                              //   _deleteDialogWrapper(modelList[index]);
+                              // },
+                            ),
+                            Divider(
+                                // height: 2.0,
+                                indent: 15.0,
+                                endIndent: 20.0,
+                                color: Colors.black54)
+                          ],
+                        );
+                      },
                     );
-                  }),
+                  }
+                  return Center(
+                    child: CircularProgressIndicator(),
+                  );
+                },
+              ),
             )
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          navigateToDetail(Model(null, '', ''), 'Add');
+          navigateToDetail(CustomModel(id: null, word: '', trans: ''), 'Add');
         },
         child: Icon(Icons.add),
       ),

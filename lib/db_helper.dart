@@ -6,12 +6,12 @@ import 'package:flutterapplatinlist/constants.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
-class DBHelper {
+class ListDBHelper {
   final String _dbName = Constants.listDBName;
 
-  static final DBHelper _instance = DBHelper.internal();
+  static final ListDBHelper _instance = ListDBHelper.internal();
 
-  factory DBHelper() {
+  factory ListDBHelper() {
     return _instance;
   }
 
@@ -25,7 +25,7 @@ class DBHelper {
     return _db;
   }
 
-  DBHelper.internal();
+  ListDBHelper.internal();
 
   initDB() async {
     var databasesPath = await getDatabasesPath();
