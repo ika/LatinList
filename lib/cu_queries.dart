@@ -34,9 +34,9 @@ class CustomDBQueries {
     return await db.delete(_dbTable, where: 'id=?', whereArgs: [id]);
   }
 
-  Future<int> getCount() async {
-    final db = await con.db;
-    return Sqflite.firstIntValue(
-        await db.rawQuery('SELECT COUNT(*) FROM $_dbTable'));
-  }
+  // Future<int> getCount() async {
+  //   final db = await con.db;
+  //   return Sqflite.firstIntValue(
+  //       await db.rawQuery('SELECT COUNT(*) FROM $_dbTable'));
+  // }
 }

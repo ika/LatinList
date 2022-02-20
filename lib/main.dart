@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutterapplatinlist/search.dart';
 //import 'package:flutterapplatinlist/search.dart';
 //import 'package:flutterapplatinlist/detail.dart';
@@ -40,10 +39,21 @@ class _MainPageState extends State<MainPage> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
   List<CustomModel> modelList = [];
 
+  String listCount = "0";
+
   @override
   void initState() {
     super.initState();
+    //getCustomCount();
   }
+
+  // Future<void> getCustomCount() async {
+  //   _customDBQueries.getCount().then((value) {
+  //     setState(() {
+  //       //customListCount = value.toString();
+  //     });
+  //   });
+  // }
 
   void navigateToSearch(String text, String title) async {
     Future.delayed(
@@ -52,11 +62,11 @@ class _MainPageState extends State<MainPage> {
         Navigator.push(
           context,
           CupertinoPageRoute(
-              builder: (context) =>
-                  SearchPage(text: text, title: title)),
+              builder: (context) => SearchPage(text: text, title: title)),
         ).then(
           (value) {
             setState(() {});
+            //getCustomCount();
           },
         );
       },
@@ -74,56 +84,25 @@ class _MainPageState extends State<MainPage> {
         ).then(
           (value) {
             setState(() {});
+            //getCustomCount();
           },
         );
       },
     );
   }
 
-  //   //_mainBloc.getModelList(); // reload list
-  // }
-
-  // Future<void> _deleteItem(int id) async {
-  //   if (id != null) {
-  //     // _mainBloc.deleteSink.add(id);
-  //     // _mainBloc.getModelList();
-  //   }
-  // }
-
-  // _deleteDialogWrapper(modelList) {
-  //   return showDialog(
-  //       context: context,
-  //       builder: (context) => AlertDialog(
-  //             title: Text(
-  //               'Delete this entry?',
-  //               style: TextStyle(color: Colors.red),
-  //             ),
-  //             content: Text(modelList.word),
-  //             actions: <Widget>[
-  //               TextButton(
-  //                 child: Text('NO'),
-  //                 onPressed: () {
-  //                   Navigator.pop(context);
-  //                 },
-  //               ),
-  //               TextButton(
-  //                 child: Text('YES'),
-  //                 onPressed: () {
-  //                   Navigator.pop(context);
-  //                   _deleteItem(modelList.id);
-  //                 },
-  //               ),
-  //             ],
-  //           ));
-  // }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       key: scaffoldKey,
       appBar: AppBar(
-        title: Text(widget.title),
+        title: Text("Custom list"),
         actions: [
+          // IconButton(
+          //   tooltip: 'Sort',
+          //   icon: Icon(Icons.arrow_downward_outlined),
+          //   onPressed: () {},
+          // ),
           IconButton(
             tooltip: 'Search',
             icon: Icon(Icons.search),
@@ -152,9 +131,10 @@ class _MainPageState extends State<MainPage> {
                     AsyncSnapshot<List<CustomModel>> snapshot) {
                   if (snapshot.hasData) {
                     if (snapshot.data.length < 1) {
+                      var data = "No custom entries found";
                       return Center(
                         child: Text(
-                          'No items found',
+                          data,
                           style: TextStyle(
                               fontSize: 20, fontWeight: FontWeight.bold),
                         ),
@@ -167,6 +147,16 @@ class _MainPageState extends State<MainPage> {
                         return Column(
                           children: [
                             ListTile(
+                              leading: Padding(
+                                padding: EdgeInsets.fromLTRB(10, 10, 10, 10),
+                                child: Text(
+                                  modelList[index].id.toString(),
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18,
+                                  ),
+                                ),
+                              ),
                               title: Text(modelList[index].word),
                               subtitle: Text(modelList[index].trans),
                               onTap: () {
